@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<title>OverLAY</title>
+		<!--link rel="icon"  type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAQAAVzABAEAjBQAaDwYAWjUGAGE6CQBrQQ0ATS8PAFhAJwBUQC8AbFI6AHVXPACBZk4A4NrWAPb19QAAAAAAAMmZmZmZmgAJIwAAAAAAcMIjPjA+PjAKpxIuMDMzMAm0Ii4zMzMACaIiLt3dMAAJtyIuIzPQAAm0Un5yM+IzKLRkfncy4iIotRF+dyLkIiq0QX53F+EiGrQUTkd34iIatEVu7u5iIVrBVVRBRFRVbAtGZGZla2uwAMu7u7u8vADAAwAAgAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIABAADAAwAA" /!-->
+		<meta name="Generator" content="Processing" />
+		<!-- - - - - - - - - - - - - - - - - - - - - 
+		+
+		+    Wondering how this works? 
+		+
+		+    Go to: http://processing.org/
+		+    and: http://processingjs.org/
+		+
+		+ - - - - - - - - - - - - - - - - - - - - -->
+		<style type="text/css">
+	html, body, #wrapper {
+      height:100%;
+	  overflow: hidden;
+      margin: 0;
+      padding: 0;
+      border: none;
+      text-align: center;
+   }
+   #wrapper {
+      margin: 0 auto;
+      text-align: left;
+      vertical-align: middle;
+      width: @@width@@px;
+   }
+	body {
+	  background-color: #333; color: #bbb; line-height: normal;
+	  font-family: Lucida Grande, Lucida Sans, Arial, Helvetica Neue, Verdana, Geneva, sans-serif;
+	  font-size: 11px; font-weight: normal; text-decoration: none;
+	  line-height: 1.5em;
+	}
+	a img { 
+		border: 0px solid transparent;
+	}
+	a, a:link, a:visited, a:active, a:hover { 
+		color: #cdcdcd; text-decoration: underline;
+	}
+	h1 {
+	    font-family: Arial, Helvetica Neue, Verdana, Geneva, sans-serif;
+		width: 100%; letter-spacing: 0.1em;
+		margin-bottom: 1em; font-size: 1.65em;
+	}
+	canvas { 
+		display: block; 
+		outline: 0px; 
+		margin-bottom: 1.5em; 
+	}
+	#content { 
+		margin: 5px auto 0px auto; padding: 5px 5px 5px 5px;
+		width: @@width@@px; min-width: 300px; 
+		border-left: 1px solid #444; border-top: 1px solid #444; 
+		border-right: 1px solid #333; border-bottom: 1px solid #333;
+		background-color: #3d3d3d;
+
+	}
+	#head { 
+		margin: 5px auto 0px auto; padding: 5px 5px 5px 5px;
+		width: @@width@@px; min-width: 300px; 
+		border-left: 1px solid #444; border-top: 1px solid #444; 
+		border-right: 1px solid #333; border-bottom: 1px solid #333;
+		background-color: #3d3d3d;
+
+	}
+	</style>
+	<!--[if lt IE 9]>
+		<script type="text/javascript">alert("Your browser does not support the canvas tag.");</script>
+	<![endif]-->
+	<script src="processing_en.js" type="text/javascript"></script>
+	<script type="text/javascript" src="jszip.js" ></script>
+	<script type="text/javascript" src="jszip-utils.js" ></script>
+	<script type="text/javascript">
+	// convenience function to fetch ID of sketch html element
+		function getProcessingSketchID () { return 'envideo'; }
+		document.onselectstart=new Function('return false');
+		function $_GET(q,s) { 
+			s = s ? s : window.location.search; 
+			var re = new RegExp('&'+q+'(?:=([^&]*))?(?=&|$)','i'); 
+			return (s=s.replace(/^\?/,'&').match(re)) ? (typeof s[1] == 'undefined' ? '' : decodeURIComponent(s[1])) : undefined; 
+		} 
+		function keepPos(){
+			document.body.scrollTop=0;
+			//alert(document.getElementById("container").clientHeight);
+		}
+		 if (window.addEventListener) {
+			  window.addEventListener('DOMMouseScroll', wheel, false);
+		  }
+		window.onmousewheel = document.onmousewheel = wheel;
+		function wheel(e) {
+		  preventDefault(e);
+		}
+		function preventDefault(e) {
+		  e = e || window.event;
+		  if (e.preventDefault)
+			  e.preventDefault();
+		  e.returnValue = false;  
+		}
+
+	</script>
+
+	</head>
+	<body scroll="no" onscroll="keepPos()">
+		<table id="wrapper">
+		<tr>
+		<td id="container">
+		<div>
+			<div id="head" align="center">OverLAY</div>
+			<div id="content">
+				We are preparing your video, just a few seconds, please!
+				<script type="text/javascript">
+					var get_value=$_GET("drectory");
+					var zipMode=0;
+					var xmlDoc;
+					var overlayXML="a";
+					var heightCorrection=100;
+					//var dx=0,dy=0;
+					if (get_value==undefined) zipMode=1;
+					else get_value.search(".zip")>-1?zipMode=1:'';
+					function createCanvas(){
+						
+						//zipMode=0;
+						  //document.write(typeof(overlayXML));
+						wdth=parseInt(xmlDoc.getElementsByTagName("dimensions")[0].getAttribute("width"));
+						ch=xmlDoc.getElementsByTagName("dimensions")[0].getAttribute("channels");
+						if (ch>1) wdth+=22;
+						
+						
+						if (wdth<300) wdth=300;
+						
+						
+						heght=parseInt(xmlDoc.getElementsByTagName("dimensions")[0].getAttribute("height"))+22;
+						scle=1;
+						
+						if (wdth>window.innerWidth) {
+							scle=(window.innerWidth-25)/wdth;
+							wdth=window.innerWidth-25;
+							heght=heght*scle;
+						}
+						if (heght>window.innerHeight-heightCorrection) {
+							scle=(window.innerHeight-heightCorrection)/heght;
+							heght=window.innerHeight-heightCorrection;
+							wdth*=scle;
+						}
+						
+						document.getElementById('content').style.width=(wdth)+'px';
+						document.getElementById("content").innerHTML="<canvas id=\"envideo\" data-processing-sources=\"en_video.pde\" width=\""+wdth+"\" height=\""+(heght)+"\"><p>Your browser does not support the canvas tag.</p></canvas>";
+						var procCanvas=document.getElementById("envideo");
+						procCanvas.width=wdth;
+						procCanvas.height=heght;
+						Processing.loadSketchFromSources("envideo",["en_video.pde"]);
+					}
+					if (zipMode) {
+						var zip=new JSZip();
+						if (get_value!=undefined){
+							JSZipUtils.getBinaryContent(get_value, function(err, data) {
+								if(err) {
+									document.write("error");
+								  return;
+								}
+
+								
+								  zip.loadAsync(data)
+								  .then(function() {
+									//xmlDoc=(new DOMParser).parseFromString(zip.file("overlay.xml").async("string"),"text/xml"); 
+									//document.write(zip.file("overlay.xml").async("string"));
+									return zip.file("overlay.xml").async("string");
+								  })
+								  .then(function success(text) {
+									xmlDoc=(new DOMParser).parseFromString(text,"application/xml"); 
+									overlayXML=text;
+									createCanvas();
+									
+								  }, function error(e) {
+									document.write("error");
+								  });
+							
+							});
+						}
+						else document.getElementById("content").innerHTML="<input type=\"file\" id=\"zipfile\" onchange=\"zipFile_Changed()\" />";
+						function zipFile_Changed(){
+							var zipurl=document.getElementById("zipfile").files[0];
+							zip.loadAsync(zipurl)
+							.then(function() {
+								//xmlDoc=(new DOMParser).parseFromString(zip.file("overlay.xml").async("string"),"text/xml"); 
+								//document.write(zip.file("overlay.xml").async("string"));
+								return zip.file("overlay.xml").async("string");
+							  })
+							  .then(function success(text) {
+								xmlDoc=(new DOMParser).parseFromString(text,"application/xml"); 
+								overlayXML=text;
+								createCanvas();
+								
+							  }, function error(e) {
+								document.write("error");
+							  });
+						}
+					}
+					else {
+						var dirToLU=get_value+"/";
+						if (window.XMLHttpRequest)
+							{// code for IE7+, Firefox, Chrome, Opera, Safari
+								xmlhttp=new XMLHttpRequest();
+							}
+							else
+							{// code for IE6, IE5
+								xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+							}
+						xmlhttp.open("GET",dirToLU+"overlay.xml",false);
+						xmlhttp.send();
+						xmlDoc=xmlhttp.responseXML;
+						createCanvas();
+					}
+
+
+						
+				</script>
+				
+				<noscript>
+					<p>JavaScript is required to view the contents of this page.</p>
+				</noscript>
+	    	</div>
+			  based on <a href="https://www.processingjs.org">ProcessingJS</a> and <a href="https://stuk.github.io/jszip/">JSZip</a><br> Copyright (C) 2013  <a href="http://www.embl.de/research/units/dev_biology/ephrussi/members/index.php?s_personId=CP-60009319">Imre Gaspar</a><br>
+		</div>
+		</td>
+		</tr>
+		</table>
+	</body>
+</html>
