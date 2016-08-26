@@ -41,6 +41,19 @@
 	This ROI only appears ot the image slice where it was originally defined. If you want to increase/shrink its duration, select it in the <i>overlay list</i> move to the appropriate slice and click 'Expand'. 
 	The 'Update' button allows you to reposition, recolor or change the type of the ROI. The original start slice and duration properties are preserved.<br>
  	Below the image, you can adjust the behavior of the player (see the <i>control</i> tag).<br><br>
+ 	<i>Special ROIs</i><br>
+ 	These special inputs of Text ROIs will add the following overlays:
+ 	<ul>
+ 		<li>
+ 			time:<i>start_time</i>:<i>increment</i>:<i>unit</i> (e.g 'time:0.0:0.2:s') - <i>time</i> tag 
+ 		</li>
+ 		<li>
+ 			channel:<i>channel_number</i>:<i>channel_name</i> (e.g 'channel:1:GFP') - <i>channel</i> tag 
+ 		</li>
+ 		<li>
+ 			scale:<i>length</i> (e.g 'scale:5') - a <i>length</i> long (in physical units, e.g. microns) <i>line</i>  
+ 		</li>
+ 	</ul><br>
 	<b>Current version</b><br><br>
 	The current version of overLay is <a href="overLay_.zip">0.1</a>. It uses the <a href="http://www.jdom.org/">JDOM 2.0.6</a> library to parse .xml files, which is included in the .jar file.<br>
 	The source code of overLay is available <a href="overLay.java.zip">here</a>
