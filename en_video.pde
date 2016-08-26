@@ -38,7 +38,7 @@ int done_strt=0;
 int done_stp=0;
 double zoom=1.0;
 int mx,my,top,left,dx,dy;
-int chbtOff=7;
+int chbtOff=8;
 //int mouseScroll=0;
 boolean isExplorer=(navigator.appName == "Microsoft Internet Explorer");
 //String[] imn=loadStrings("img.txt");
@@ -52,7 +52,6 @@ int maxReqItems;
 int lastReqItem=0;
 butoons[] btns=new butoons[chbtOff];
 scroolBar scrb;
-fillBar PrgBar;
 boolean mgnify;
 boolean stp;
 boolean inv;
@@ -62,10 +61,12 @@ boolean playable;
 boolean imagesReady=false;
 boolean imagesCalculated=false;
 boolean mseOver=false;
+boolean show_help=false;
 XMLElement xml;
 //int maxPathLength=5;
 String aW;
 String ext=".jpg";
+String helpString="SPACE - toggle play\nmouse scroll, LEFT/RIGHT arrow - step one frame\nUP/DOWN arrow - adjust the playback speed\n1-0 - toggle channels\nm - toggle magnifier\no - toggle overlay\nh - toggle help";
 overlys[] ols;
 /** global colors**/
 color sC=color(#000022);
@@ -148,10 +149,12 @@ void setupButoons(){
  int[] vx={3,3,12,9,9,17};
  int[] vy={3,17,10,3,17,10};
  btns[2]=new simpleButoon(22,offH,20,20,TRIANGLES,vx,vy); 
- btns[3]=new textButoon(wdth-96,offH,47,20,"MGNFY","magnify area under mouse"); 
- btns[4]=new textButoon(wdth-48,offH,47,20,"OVRLY", "toggle graphical overlay");
- btns[5]=new textButoon(wdth-150,offH,20,20,"1x", "restore original scale"); 
- btns[6]=new textButoon(wdth-128,offH,30,20,"MAX", "scale to available space"); 
+ btns[3]=new textButoon(wdth-108,offH,47,20,"MGNFY","magnify area under mouse"); 
+ btns[4]=new textButoon(wdth-60,offH,47,20,"OVRLY", "toggle graphical overlay");
+ btns[5]=new textButoon(wdth-162,offH,20,20,"1x", "restore original scale"); 
+ btns[6]=new textButoon(wdth-140,offH,30,20,"MAX", "scale to available space"); 
+ btns[7]=new textButoon(wdth-12,offH,12,20,"?", "show help");
+ btns[7].setColor=butoons.offColor; 
  if (isExplorer) {
     btns[5].setColor=butoons.offColor;
     btns[6].setColor=butoons.offColor;
@@ -163,20 +166,23 @@ void setupButoons(){
  }
  //println(f_Rate);
  FPSBar=new fillBar(22,offH,55,20,f_Rate,5,60);
- f_Rate=(int)f_Rate;
- PrgBar=new fillBar(wdth/2-100,H/2+20,200,20,0,0,D);
+ int strtPos=0;
  if (!playable) {
      btns[0].operational=false;
      FPSBar.operational=false;
-     scrbPos[0]=44;scrbPos[1]=offH;scrbPos[2]=wdth-203;scrbPos[03]=20;
-     scrb=new scroolBar(44,offH,wdth-203,20,0,D,f,true,true);
+     scrbPos[0]=44;scrbPos[1]=offH;scrbPos[2]=wdth-208;scrbPos[03]=20;strtPos=f;
  }
  else {
      btns[1].operational=false;
      btns[2].operational=false;
-     scrbPos[0]=79;scrbPos[1]=offH;scrbPos[2]=wdth-236;scrbPos[03]=20;
-     scrb=new scroolBar(79,offH,wdth-236,20,0,D,0,true,true);  
+     scrbPos[0]=79;scrbPos[1]=offH;scrbPos[2]=wdth-246;scrbPos[03]=20;     
  }
+ if (resizeable) {
+	 btns[5].operational=false;
+     btns[6].operational=false;
+	 scrbPos[0]=44;scrbPos[1]=offH;scrbPos[2]=wdth-160;scrbPos[03]=20;
+ }
+ scrb=new scroolBar(scrbPos[0],scrbPos[1],scrbPos[2],scrbPos[3],0,D,strtPos,true,true); 
  if (stp) scrb.lop=!stp;
 }
 void loadXML(){
@@ -225,14 +231,16 @@ void loadXML(){
           }
           else ols[i]=new overlys();
           break;
-        case overlys.PLYGON:
+        case overlys.PLYLINE:
+		case overlys.PLYGON:
           int s=int(kid.getInt("strt"));
           int l=int(kid.getInt("len"));
           int n=int(kid.getInt("n"));
           color cl=int(kid.getInt("clor"));
           cl=color((cl>>16&0xff),(cl>>8&0xff),(cl&0xff));
           if (kid.getChildCount()==n) {
-            ols[i]=new plygon(s,l,n,cl);
+            if (t==overlys.PLYLINE) {ols[i]=new plyline(s,l,n,cl);}
+			else ols[i]=new plygon(s,l,n,cl);
             for (int j=0;j<kid.getChildCount();j++){
                String[] p=split(kid.getChild(j).getContent(),",");
                ols[i].loadPoint(j,int(p[0]),int(p[1])); 
@@ -346,12 +354,13 @@ void draw() {
 			if (channels>3&&key=='4') toggleChannel(3+chbtOff);*/
 			if (key=='o'||key=='O') buttonClicked(4);
 			if (key=='m'||key=='M') buttonClicked(3);
+			if (key=='h'||key=='H') buttonClicked(7);
 			keyPressed=false;
 		}
 		pushStyle();
-		if (ovrly) overly();
+		if (ovrly&&!show_help) overly();
 		popStyle();
-		if (imagesReady&&mgnify) Magnify();
+		if (imagesReady&&mgnify&&!show_help) Magnify();
 		if (imagesReady&&!stp) ply();
 		else {
 			if (mouseScroll%1!=0) mouseScroll=0;
@@ -368,6 +377,7 @@ void draw() {
 		}
 		if (channels>1&&calculated[channels-1][f]&&!calculated[chTS][f]) calculateImages(f);
     }
+	if (show_help) showHelp();
 	scale(1.0/scle);
     drawButoonBar(); 
 } 
@@ -409,6 +419,14 @@ void drawButoonBar(){
     fill(fC);
     text(fRate+" FPS",66,225);
     popStyle();*/
+}
+void showHelp(){
+	pushStyle();
+	fill(afC,180);
+	rect (2,2,296,106);
+	fill (0xffffff,255);
+	text (helpString,4,6,292,103);
+	popStyle();
 }
 /** end main **/
 
@@ -565,9 +583,17 @@ void buttonClicked(int i){
     }
     break;
   case 7:
+	show_help=!show_help;
   case 8:
   case 9:
   case 10:
+  case 11:
+  case 12:
+  case 13:
+  case 14:
+  case 15:
+  case 16:
+  case 17:
     toggleChannel(i);
    
   break;
@@ -1129,7 +1155,7 @@ class plyline extends overlys{
    for (int i=0;i<np;i++){
       vertex(xs[i],ys[i]);
    } 
-   if (type==overlys.PLYLINE) endShape();
+   if (this.type==overlys.PLYLINE) {endShape();}
    else endShape(CLOSE);
   }
 }

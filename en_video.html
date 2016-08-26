@@ -107,7 +107,7 @@
 		<tr>
 		<td id="container">
 		<div>
-			<div id="head" align="center">OverLAY</div>
+			<table id="head" align="center"><tr><td align="left"><a href="index.html">Main page</a></td><td align="center">OverLAY</td><td align="right"><a href="examples.html">Examples</a></td></table>
 			<div id="content">
 				We are preparing your video, just a few seconds, please!
 				<script type="text/javascript">
@@ -115,7 +115,7 @@
 					var zipMode=0;
 					var xmlDoc;
 					var overlayXML="a";
-					var heightCorrection=100;
+					var heightCorrection=0;
 					//var dx=0,dy=0;
 					if (get_value==undefined) zipMode=1;
 					else get_value.search(".zip")>-1?zipMode=1:'';
@@ -123,6 +123,8 @@
 						
 						//zipMode=0;
 						  //document.write(typeof(overlayXML));
+						heightCorrection=parseInt(document.getElementById("head").offsetHeight)+60;
+						
 						wdth=parseInt(xmlDoc.getElementsByTagName("dimensions")[0].getAttribute("width"));
 						ch=xmlDoc.getElementsByTagName("dimensions")[0].getAttribute("channels");
 						if (ch>1) wdth+=22;
@@ -146,6 +148,7 @@
 						}
 						
 						document.getElementById('content').style.width=(wdth)+'px';
+						document.getElementById('head').style.width=(wdth)+'px';
 						document.getElementById("content").innerHTML="<canvas id=\"envideo\" data-processing-sources=\"en_video.pde\" width=\""+wdth+"\" height=\""+(heght)+"\"><p>Your browser does not support the canvas tag.</p></canvas>";
 						var procCanvas=document.getElementById("envideo");
 						procCanvas.width=wdth;
@@ -157,7 +160,7 @@
 						if (get_value!=undefined){
 							JSZipUtils.getBinaryContent(get_value, function(err, data) {
 								if(err) {
-									document.write("error");
+									document.getElementById("content").innerHTML="Oops. It seems that we ran into some trouble.<br>Please, make sure that you select a valid OverLAY .zip file!";
 								  return;
 								}
 
@@ -174,7 +177,7 @@
 									createCanvas();
 									
 								  }, function error(e) {
-									document.write("error");
+									document.getElementById("content").innerHTML="Oops. It seems that we ran into some trouble.<br>Please, make sure that you select a valid OverLAY .zip file!";
 								  });
 							
 							});
@@ -222,7 +225,9 @@
 					<p>JavaScript is required to view the contents of this page.</p>
 				</noscript>
 	    	</div>
-			  based on <a href="https://www.processingjs.org">ProcessingJS</a> and <a href="https://stuk.github.io/jszip/">JSZip</a><br> Copyright (C) 2013  <a href="http://www.embl.de/research/units/dev_biology/ephrussi/members/index.php?s_personId=CP-60009319">Imre Gaspar</a><br>
+			  <div id="foot">
+			  based on <a href="https://www.processingjs.org">Processing.js</a> and <a href="https://stuk.github.io/jszip/">JSZip</a>,  Copyright (C) 2014  <a href="http://www.embl.de/research/units/dev_biology/ephrussi/members/index.php?s_personId=CP-60009319">Imre Gaspar</a><br>
+			  </div>
 		</div>
 		</td>
 		</tr>
