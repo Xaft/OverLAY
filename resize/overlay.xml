@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<overlay>
+<dimensions id="99" width="396" height="310" depth="5" channels="2" ext=".jpg"></dimensions>
+<controls id="98" isPlayable="0" isPlaying="0" overlaid="1" magnifyable="1" mag_size="50" isResizeable="1"></controls>
+<line type="1" id="97" clor="16777215" strt="0" len="5" x0="4" y0="4" x1="41" y1="4"></line>
+<channel type="12" id="0" channel_no="1" strt="0" len="68" clor="16777215" x="4" y="20">oskar</channel>
+<channel type="12" id="1" channel_no="2" strt="0" len="68" clor="65535" x="44" y="20">Oskar</channel>
+</overlay>
