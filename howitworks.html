@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Overlay by Xaft</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Overlay</h1>
+      <h2 class="project-tagline">a video player for mainly scientific purposes</h2>
+	  <a href="https://xaft.github.io/OverLAY/index.html" class="btn">About</a>
+      <a href="https://xaft.github.io/OverLAY/howitworks.html" class="btn">How it works</a>	
+      <a href="https://xaft.github.io/OverLAY/examples.html" class="btn">Examples</a>
+      <a href="https://xaft.github.io/OverLAY/downloads.html" class="btn">Download</a>
+      <a href="https://xaft.github.io/OverLAY/overLay.html" class="btn">overLay plug-in</a>  
+      <a href="https://github.com/Xaft/OverLAY" class="btn">View on GitHub</a>
+      <!--a href="https://github.com/Xaft/OverLAY/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/Xaft/OverLAY/tarball/master" class="btn">Download .tar.gz</a!-->
+    </section>
+
+    <section class="main-content">
+    <h3>
+	<div align="justify">HOW IT WORKS<br /><br /> OverLAY is a script written in <a href="https://processingjs.org">Processing.js</a> and  <a href="https://www.javascript.com">JavaScript</a>. It uses the <a href="https://stuk.github.io/jszip/">JSZip.js</a> library to read contents of zip files.<br /><br />
+    The OverLAY script requires HTTP(s) protocol (a web-server) to run. It can't be executed 
+    by simply opening the <a href="en_video.html">en_video.html</a> file in your web-browser using the local FILE protocol.<br />
+    However, any <a href="https://www.wikiwand.com/en/Web_server">web-server</a> - even the public folder of a <a href="https://www.dropbox.com">Dropbox</a> account - and any host - even the localhost - will do. <br>
+	The script was tested to run in the following browsers: Microsoft Edge, Google Chrome, Mozilla Firefox and Apple Safari
+	<br /><br />
+     <b>OverLAY can open videos </b>
+     <ul>
+     	<li>stored remotely on a web-server. <br />
+        In this case, the server-side reference of the storing folder or .zip file has to be provided in a GET type request named 'drectory':<br />
+        </li>
+        ...a href="en_video.html?drectory=path/to/folder/or/zip"...
+        <li>stored locally on your computer<br />
+        requesting <a href="en_video.html">en_video.html</a> (from a web server, of course) without the 'drectory' parameter will allow you to select a .zip file from your computer, the contents of which will be displayed in the player. Please note, that this genrates no network traffic between your computer and the server hosting the OverLAY script, i.e. your file never leaves your computer.
+        </li>
+     </ul><br />
+     While the first way is great to share your data with the public by hosting it on a web server, the second option requires that you to previously share the data with your colleagues and collaborators via a cloud, ftp or e-mail, which they can then view by feeding it to OverLAY<br /><br />
+     <b>Using the player</b>
+	 <img src="player.jpg" align="center" alt="player">
+	 <p>The script first initializes and loads the images. You'll see the progress bar filling up. The frames that have been loaded are accessible right away, i.e clicking on the progress bar, using the mouse scroll or the LEFT/RIGHT arrows on your keyboard you can start inspecting the data even without fully loading the image sequence.<br>
+	 Once the entire video has been loaded, playing - if enabled - starts. The playback can be controlled by the PLAY button in the lower left corner or by hitting the SPACE bar. Next to the play button, the speed of playback can be adjusted between 5-60 FPS either by clicking on the bar or using the UP/DOWN arrows. Also, if the mouse is hoverng over this bar, the mousescroll adjusts its value.<br>
+	 When the video is stopped or if it is a non-playable image series, you can move between the frames by dragging/clicking the progress bar, using the mouse scroll or the LEFT/RIGHT arrows.<br>
+	 The MGNIFY button or hitting 'm' on the keyboard toggle the magnifier tool, the OVRLY button or hitting 'o' does the same with the graphical overlay.<br>
+	 The channel buttons at the upper right corner or the corresponding numerical keys toggle the channels.<br>
+	 The 1x and MAX buttons restore the original size or maximize the player to the available space, respectively. Please note, that if the image dimensions are larger than the available space, the player starts in a 'maximized' state (i.e. it fill the space),
+	 and thus these two button won't do anything.</br>
+	 You may also use the zoom function of the browser (e.g. Ctrl-+ and Ctrl--). However, if you do so, the 1x and MAX button will behave funny as they are initialized with the zoom settings that were at the loading of the script. <br>
+	 <div align="center">THIS IS NOW THE TECHNICAL STUFF</div>
+     <b>The video architecture</b><br /><br />
+     OverLAY actually plays images in a quick succession. These images - unlike frames of an encoded video file -  are independent of each other; in media terms this means that every frame is a keyframe. This has its pros - easy stepping through the seqeunce in both directions - and its cons - larger file size.<br /><br />
+     The images in the storing folder/.zip file has to be provided with the following naming standard:<br />
+     [a-z][NNN].ext, where the first character (a-z) indicates the channel and the NNN type counter indicates the frame number, e.g. <b>a000.jpg</b> and <b>d9780.jpg</b> are valid image names, whereas <b>A001.jpg</b> or <b>a9.jpg</b> are not.<br /> Please note, that for sequences shorter than 1000 frames three digit counters are used while for sequences longer than 1000 frames the counter automatically expands to the necessary number of digits.<br /><br />
+     Extensions could be one of the following image file formats: .tif, .bmp, .png and .jpg.<br />I personally favor .jpg as it implements quite good compressions even without loss-of-information, thus it reduces the size of the file that has to be downloaded. <br />
+     Also, I've found that with jpeg quality set to 80%, there is no visible loss-of-quality (certainly not compared to a compressed video file) and the file sizes are only about 25% or less of the 100% quality versions. All examples on this page are based on such 80% quality jpeg files.
+     <br /><br />
+     Besides the sufficient number of RGB jpegs, the folder/.zip file must contain an overlay.xml that describes basic properties of the video and the overlays that need to be displayed.<br /> <br />
+     <b> The overlay.xml file</b><br /><br />
+     <div style="padding-left:20px">A minimal overlay.xml looks like this:<br />
+     &lt?xml version="1.0"?&gt <br>
+     &lt;overlay&gt <br>
+     &lt;dimensions id="99" width="<i>image width</i>" height="<i>image height</i>" depth="<i>sequence length</i>" channels="<i>number of channels</i>" ext="<i>.jpg or .png or .bmp or .tif</i>" lateral_resolution="<i>pixel width in real units</i>" axial_resolution="<i>pixel depth in same units</i>" unit="<i>unit</i>"&gt;&lt;/dimensions&gt <br />
+     &lt;controls id="98" isPlayable="<i>1 or 0</i>" isPlaying="<i>1 or 0</i>" FPS="<i>5-60</i>" overlaid="<i>1 or 0</i>" magnifyable="<i>1 or 0</i>" mag_size="size of magnified area in pixels" resizable="<i>1 or 0</i>"&gt;&lt;/controls&gt <br />
+     &lt;/overlay&gt <br><br />
+     The <i>dimensions</i> tag describes the basic dimensions of the image and of the image sequence. Note, that the number of images that must be provided is <i>depth*channels</i>.<br />
+     Optionally, it tells the script the extension (<em>ext</em> attribute) and the physical resolution of the image sequence<br /><br />
+     The <em>controls</em> tag - as the name implies - tells the player how to behave: if an image series can be played (<em>isPlayable</em>), if it is playing by default (<em>isPlaying</em>) and with what speed (<em>FPS</em>), if it shows the overlay by default (<em>overlaid</em>), if it can be magnified (<em>magnifyable</em>) and what is the size of the magnified area (<em>mag_size</em>) and whether the images have the same dimensions or the player has to resize (<em>resizable</em>)<br /><br />
+     Implemented graphical overlay elements:<br /><br />
+     These elements describe what <b>type</b> of overlay is to displayed in what <b>color (clor)</b>, <b>staring at which frame (strt)</b> and for how <b>long (len)</b>. Thus, these four attributes (<b>type, clor, strt and len</b>) are common for each elements. Moreover, the elemnts have an <b>id</b> attribute which ideally should be unique amongst the same type of elements, although the same id does not cause any problems right now <br /><br />
+     Displaying a line between (x0,y0) and (x1,y1) pixel co-ordinates.<br />
+     &lt;line type="<b>1</b>" id="<i>an integer number</i>" clor="<i>an 24 or 32 bit integer number</i>" strt="<i>0 - depth-1</i>" len="<i>&lt;=depth</i>i" x0="<i>0 - width-1</i>" y0="<i>0 - height-1</i>"  x1="<i>0 - width-1</i>" y1="<i>0 - height-1</i>"&gt;&lt;/line&gt <br /><br />
+     
+     Displaying an arrow between (x0,y0) and (x1,y1) pixel co-ordinates.<br />
+     &lt;arrow type="<b>2</b>" id="<i>an integer number</i>" clor="<i>an 24 or 32 bit integer number</i>" strt="<i>0 - depth-1</i>" len="<i>&lt;=depth</i>i" x0="<i>0 - width-1</i>" y0="<i>0 - height-1</i>"  x1="<i>0 - width-1</i>" y1="<i>0 - height-1</i>" head_size="<i>size of the arrowhead in pixels</i>" double_head="<i>1 or 0</i>" &gt;&lt;/arrow&gt <br /><br />
+     
+     Displaying a polygon with <i>n</i> verteces (n&gt;=3)<br />
+     &lt;polygon type="<b>5</b>" id="<i>an integer number</i>" clor="<i>an 24 or 32 bit integer number</i>" strt="<i>0 - depth-1</i>" len="<i>&lt;=depth</i>i" n="<i>number of verteces</i>"   &gt;<br />
+     &lt;p&gt;x<sub>0</sub>,y<sub>0</sub>&lt;/p&gt;<br />
+     &lt;p&gt;x<sub>1</sub>,y<sub>1</sub>&lt;/p&gt;<br />
+     .<br />
+     .<br />
+     &lt;p&gt;xn<sub>n</sub>,y<sub>n</sub>&lt;/p&gt;<br />
+     &lt;/polygon&gt <br /><br />
+     
+     Displaying a path (a polyline changing over time) with <i>len</i> number of co-ordinates<br />
+     &lt;path type="<b>0</b>" id="<i>an integer number</i>" clor="<i>an 24 or 32 bit integer number</i>" strt="<i>0 - depth-1</i>" len="<i>&lt;=depth</i>i" mdl="<i>max. displayed number of co-ordinates</i>"   &gt;<br />
+     &lt;p&gt;x<sub>0</sub>,y<sub>0</sub>&lt;/p&gt;<br />
+     &lt;p&gt;x<sub>1</sub>,y<sub>1</sub>&lt;/p&gt;<br />
+     .<br />
+     .<br />
+     &lt;p&gt;xn<sub>n</sub>,y<sub>n</sub>&lt;/p&gt;<br />
+     &lt;/path&gt <br /><br />
+     
+     Displaying an ellipse centered around (x,y) with <i>wdth</i> width and <i>heght</i> height.<br />
+     &lt;ellipse type="<b>6</b>" id="<i>an integer number</i>" clor="<i>an 24 or 32 bit integer number</i>" strt="<i>0 - depth-1</i>" len="<i>&lt;=depth</i>i" x="<i>0 - width-1</i>" y="<i>0 - height-1</i>"  wdth="<i>0 - width-1</i>" heght="<i>0 - height-1</i>"  &gt;&lt;/ellipse&gt <br /><br />
+     
+     Displaying text with top-left corner at (x,y)<br />
+     &lt;text type="<b>10</b>" id="<i>an integer number</i>" clor="<i>an 24 or 32 bit integer number</i>" strt="<i>0 - depth-1</i>" len="<i>&lt;=depth</i>i" x="<i>0 - width-1</i>" y="<i>0 - height-1</i>"&gt;<i>text-to-display</i>&lt;/ellipse&gt <br /><br />
+     
+     Displaying a timer with top-left corner at (x,y)<br />
+     &lt;time type="<b>11</b>" id="<i>an integer number</i>" clor="<i>an 24 or 32 bit integer number</i>" strt="<i>0 - depth-1</i>" len="<i>&lt;=depth</i>i" x="<i>0 - width-1</i>" y="<i>0 - height-1</i>" unit="<i>unit-to-display</i> inc="<i>increment in float number</i>"&gt;<i>starting time in float number</i>&lt;/ellipse&gt <br /><br />
+     
+     Displaying channel name with top-left corner at (x,y)<br />
+     &lt;channel type="<b>12</b>" id="<i>an integer number</i>" clor="<i>an 24 or 32 bit integer number</i>" strt="<i>0 - depth-1</i>" len="<i>&lt;=depth</i>i" x="<i>0 - width-1</i>" y="<i>0 - height-1</i>" channel_no="<i>1 - channel number</i> "&gt;<i>channel name</i>&lt;/ellipse&gt <br /><br />
+     </div>
+     <br />
+     Although this overlay.xml can be created even in a simple text editor, I recommend using the <a href="overLay.html">overLay plug-in</a> to <a href="https://imagej.nih.gov/ij/index.html">ImageJ</a>/<a href="https://fiji.sc/">FIJI</a>. This plug-in helps you annotating your image series and exprots an OverLAY compatible folder/.zip file<br />
+     
+     Also, you may implement a writer function in your image analyzing algorithm (e.g. in an ImageJ plug-in or macro) that directs its formatted output into overlay.xml. </br>
+     
+     
+     </div>
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/Xaft/OverLAY">Overlay</a> is maintained by <a href="https://github.com/Xaft">Xaft</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
