@@ -1,0 +1,503 @@
+
+jQuery.fn.extend({
+/**
+* Returns get parameters.
+*
+* If the desired param does not exist, null will be returned
+*
+* To get the document params:
+* @example value = jQuery(document).getUrlParam("paramName");
+*
+* To get the params of a html-attribut (uses src attribute)
+* @example value = jQuery('#imgLink').getUrlParam("paramName");
+*/
+ getUrlParam: function(strParamName){
+		strParamName = escape(unescape(strParamName));
+		var returnVal = new Array();
+		var qString = null;
+		if (jQuery(this).attr("nodeName")=="#document") {
+			if (window.location.search.search(strParamName) > -1 ){
+				qString = window.location.search.substr(1,window.location.search.length).split("&");
+			}
+	  } else if (jQuery(this).attr("src")!="undefined") {
+		var strHref = jQuery(this).attr("src")
+		if ( strHref.indexOf("?") > -1 ){
+			var strQueryString = strHref.substr(strHref.indexOf("?")+1);
+			qString = strQueryString.split("&");
+		}
+	  } else if (jQuery(this).attr("href")!="undefined") {
+		var strHref = jQuery(this).attr("href")
+		if ( strHref.indexOf("?") > -1 ){
+			var strQueryString = strHref.substr(strHref.indexOf("?")+1);
+			qString = strQueryString.split("&");
+		}
+	  } else {
+		return null;
+	  }
+	  if (qString==null) return null;
+	  for (var i=0;i<qString.length; i++){
+			if (escape(unescape(qString[i].split("=")[0])) == strParamName){
+				returnVal.push(qString[i].split("=")[1]);
+			}
+	  }
+	  if (returnVal.length==0) return null;
+	  else if (returnVal.length==1) return returnVal[0];
+	  else return returnVal;
+	}
+});
+
+// Get Adwords
+jQuery(document).ready(function() {
+	 function initAdwords() {
+        var options = { path: '/' };
+		if(jQuery(document).getUrlParam("kw")){
+	        jQuery.cookie('adwords_keywords', jQuery(document).getUrlParam("kw"), options);
+		}
+		if(jQuery(document).getUrlParam("nlc")){
+			jQuery.cookie('adwords_eventcode', jQuery(document).getUrlParam("nlc"), options );
+		}
+    }
+    if (window.cookieManager) { window.cookieManager.startSystem('adwords', initAdwords); } else { initAdwords(); }
+});
+
+
+
+
+
+jQuery(document).ready(function() {
+	// TOC for articles
+	var count = 1;
+	var list = jQuery("<ul class='sl-article-toc-list'></ul>");
+	jQuery('h2:not(.dontShowInToc)').each(function() {
+		var heading = jQuery(this),
+			currentId = heading.attr('id');
+		if (!currentId){
+			currentId = "toc"+ count;
+			heading.attr('id', currentId);
+		}
+		jQuery("<li class='sl-article-toc-item'></li>")
+			.data("target", currentId)
+			.text(heading.text())
+			.appendTo(list);
+		count ++;
+	});
+	if(count > 1 ){
+		jQuery("#sl-article-toc").append("<h2>Contents</h2>").append(list);
+	} else {
+		jQuery("#sl-article-toc").hide();
+	}
+	jQuery('.sl-article-toc-item').bind('click', function(){
+		jQuery('html,body').animate({
+			scrollTop: jQuery("#" + jQuery(this).data("target")).offset().top -120
+		}, 1000);
+	});
+	jQuery('#content').prepend(jQuery('#sl-article-toc'));
+});
+
+/**********
+ * Adjustment of topic and tag lists
+ **********/
+
+jQuery(document).ready(function() {
+	var debugFactor = 1;
+
+	var minTags = 2;
+	var minTopics = 2;
+	var widthFactor = 2.5;
+	var timeFadeOut = 100 * debugFactor;
+	var timeSlide = 350 * debugFactor;
+	var timeFadeIn = 100 * debugFactor;
+	var moreButtonSpaceY = 35;
+
+	var pendingClass = 'pending';
+	var activeClass = 'active';
+	var moreButtonLabel = 'more';
+	var moreButtonLabelActive = 'close';
+	var moreButtonClass = 'sl-more-button';
+	var moreButtonCode = '<span class="' + moreButtonClass + ' btn btn-mini btn-primary">' + moreButtonLabel + '</span>';
+	var easing = 'easeOutCubic';
+
+	var $referenceBox = jQuery('.sl-article-summary, .sl-author-summary, .sl-institute-summary, .sl-topic-summary');
+	var $box = jQuery('.sl-article-meta, .sl-author-meta, .sl-institute-meta, .sl-topic-meta');
+	var $tagList = $box.find('.sl-related-tags-list');
+	var $topicList = $box.find('.sl-related-topics-list, .sl-selected-topics-list').last();
+
+	function adjustBoxHeight(firstRun) {
+		// if there is no box then don't adjust it
+		if ($box.length === 0) { return; }
+		// check if it is necessary to remove more tags/topics and if there are enough of them still visible
+		var referenceBoxHeight = $referenceBox.height();
+		var boxHeight = firstRun ? $box.height() : $box.height() + moreButtonSpaceY;
+
+		if (referenceBoxHeight < boxHeight
+			&& (($tagList.children('li:visible').length > minTags) || ($topicList.children('li:visible').length > minTopics))) {
+			if (firstRun) {
+				// hide box until height adjustment is done
+				$box.css('opacity', 0);
+				// init overlay handling once, add more-button etc
+				initAdjustBoxHeight();
+			}
+			// hide the next tag or topic
+			if ($tagList.children('li:visible').length > minTags) {
+				$tagList.children('li:visible').last().hide().attr('data-hide', true);
+			} else {
+				$topicList.children('li:visible').last().hide().attr('data-hide', true);
+			}
+			setTimeout(function() { adjustBoxHeight(false); }, 0); // create a zero-delay so that the new height can be calculated
+		} else {
+			// height adjust done: show the box and set the height fixed
+			$box.css('opacity', '');
+			$box.css('height', $box.height() + moreButtonSpaceY);
+		}
+	}
+
+	function initAdjustBoxHeight() {
+		var $moreButton = jQuery(moreButtonCode);
+		$box.append($moreButton);
+		$moreButton.click(function() {
+			if (!$box.hasClass(activeClass)) {
+				// open overlay
+				$box.addClass(pendingClass);
+				$box.children().fadeOut(timeFadeOut, function() {
+					if (jQuery(this).hasClass(moreButtonClass)) {
+						$box.animate({
+							width: $box.width() * widthFactor
+						}, {
+							duration: timeSlide,
+							easing: easing,
+							complete: function() {
+								$box.addClass(activeClass);
+								$box.removeClass(pendingClass);
+								$topicList.find('li').show();
+								$tagList.find('li').show();
+								$moreButton.text(moreButtonLabelActive);
+								$box.children().fadeIn(timeFadeIn);
+							}
+						});
+					}
+				});
+
+			} else {
+				// close overlay
+				$box.children().fadeOut(timeFadeOut, function() {
+					if (jQuery(this).hasClass(moreButtonClass)) {
+						$box.addClass(pendingClass);
+						$box.removeClass(activeClass);
+						$moreButton.text(moreButtonLabel);
+						$box.animate({
+							width: $box.width() / widthFactor
+						},
+						{
+							duration: timeSlide,
+							easing: easing,
+							complete: function() {
+								$box.removeClass(pendingClass);
+								$topicList.find('li[data-hide]').hide();
+								$tagList.find('li[data-hide]').hide();
+								$box.children().fadeIn(timeFadeIn);
+							}
+						});
+					}
+				});
+			}
+		});
+	}
+
+	adjustBoxHeight(true);
+});
+
+
+/**********
+ * jBar Plugin & modal for survey
+ **********/
+
+$(document).ready(function() {
+
+	var cookieParams = { path: '/', expires: 60};
+
+	if ($.cookie('showModalNextTime')!= -1) {
+
+		if ($("#sl-survey-modal").length > 0) {
+
+			if ($.cookie('showModalNextTime') == null) {
+				//$("#sl-survey-modal").modal('show');
+				$.cookie("showModalNextTime", 2, cookieParams);
+			} else {
+				// Show modal next time
+				if($.cookie('showModalNextTime') == 1){
+					$.cookie("showModalNextTime", null, cookieParams);
+				} else {
+					//decrease counter
+					$.cookie("showModalNextTime", $.cookie('showModalNextTime') -1, cookieParams);
+				}
+			}
+
+		}
+
+		// jBar Script by Todd Motto
+		// content element tools/survey is hidden
+		$('.jRibbon').delay(1000).fadeIn(400).addClass('up', 600);
+		$('.jBar').hide().delay(2500).slideDown(300);
+		$('.jTrigger').click(function(){
+			$('.jRibbon').toggleClass('up', 300);
+			$('.jBar').slideToggle();
+		});
+
+	} else {
+		$('.jBar-wrapper').remove();
+	}
+
+	$('.sl-start-survey').click(function(){
+		$.cookie("showModalNextTime", -1, cookieParams);
+	});
+});
+
+
+/**********
+ * placeholder for input in ie
+ **********/
+$(document).ready(function() {
+	$('input, textarea').placeholder();
+});
+
+
+/* ========================================================
+ * bootstrap-tab.js v2.0.1
+ * http://twitter.github.com/bootstrap/javascript.html#tabs
+ * ========================================================
+ * Copyright 2012 Twitter, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * ======================================================== */
+
+
+!function( $ ){
+
+  "use strict"
+
+ /* TAB CLASS DEFINITION
+  * ==================== */
+
+  var Tab = function ( element ) {
+    this.element = $(element)
+  }
+
+  Tab.prototype = {
+
+    constructor: Tab
+
+  , show: function () {
+      var $this = this.element
+        , $ul = $this.closest('ul:not(.dropdown-menu)')
+        , selector = $this.attr('data-target')
+        , previous
+        , $target
+
+      if (!selector) {
+        selector = $this.attr('href')
+        selector = selector && selector.replace(/.*(?=#[^\s]*$)/, '') //strip for ie7
+      }
+
+      if ( $this.parent('li').hasClass('active') ) return
+
+      previous = $ul.find('.active a').last()[0]
+
+      $this.trigger({
+        type: 'show'
+      , relatedTarget: previous
+      })
+
+      $target = $(selector)
+
+      this.activate($this.parent('li'), $ul)
+      this.activate($target, $target.parent(), function () {
+        $this.trigger({
+          type: 'shown'
+        , relatedTarget: previous
+        })
+      })
+    }
+
+  , activate: function ( element, container, callback) {
+      var $active = container.find('> .active')
+        , transition = callback
+            && $.support.transition
+            && $active.hasClass('fade')
+
+      function next() {
+        $active
+          .removeClass('active')
+          .find('> .dropdown-menu > .active')
+          .removeClass('active')
+
+        element.addClass('active')
+
+        if (transition) {
+          element[0].offsetWidth // reflow for transition
+          element.addClass('in')
+        } else {
+          element.removeClass('fade')
+        }
+
+        if ( element.parent('.dropdown-menu') ) {
+          element.closest('li.dropdown').addClass('active')
+        }
+
+        callback && callback()
+      }
+
+      transition ?
+        $active.one($.support.transition.end, next) :
+        next()
+
+      $active.removeClass('in')
+    }
+  }
+
+
+ /* TAB PLUGIN DEFINITION
+  * ===================== */
+
+  $.fn.tab = function ( option ) {
+    return this.each(function () {
+      var $this = $(this)
+        , data = $this.data('tab')
+      if (!data) $this.data('tab', (data = new Tab(this)))
+      if (typeof option == 'string') data[option]()
+    })
+  }
+
+  $.fn.tab.Constructor = Tab
+
+
+ /* TAB DATA-API
+  * ============ */
+
+  $(function () {
+    $('body').on('click.tab.data-api', '[data-toggle="tab"], [data-toggle="pill"]', function (e) {
+      e.preventDefault()
+      $(this).tab('show')
+    })
+  })
+
+}( window.jQuery );
+
+
+/**********
+ * Popover search
+ **********/
+
+$(document).ready(function() {
+	// $('.lms-navbar-search > a').popover({
+	// 	html: true,
+	// 	placement: 'bottom',
+	// 	content: function () {
+	// 		return $(this).parent().find('.content').html();
+	// 	}
+	// });
+
+	$('.lms-navbar-search > span').click(function(){
+		$(this).parent().toggleClass('open').find('.content').toggleClass('hide');
+		if ($(this).parent().hasClass('open')) {
+			$(this).parent().find('#siteSearchInput').focus();
+		}
+	})
+
+	$('html').click(function() {
+		$('.lms-navbar-search').removeClass('open').find('.content').addClass('hide');
+	});
+
+	$('.lms-navbar-search').click(function(event){
+	    event.stopPropagation();
+	});
+});
+
+
+/*********
+ * Article Newsletter Topic Subscription
+ *********/
+
+$(document).ready(function() {
+	$('#sl-subscription-topic-list-deselect-all').click(function(event) {
+    event.preventDefault();
+		event.stopPropagation();
+    $('.sl-subscription-topics-list input[type="checkbox"]').removeAttr('checked');
+		return false;
+	});
+});
+
+
+/**
+ * LeicaRequest For JSON requests on extbase plugins
+ */
+window.LeicaRequest = {
+    pluginPageTypes: {
+        'tx_leicashoputil_product': '1396367415',
+        'tx_leicamtooltracking_mtool': '1427132999',
+    },
+
+    requestJson: function(plugin, controller, action, localData, callback, errorCallback, sync) {
+        var url = window.location.href;
+        var data = {
+            type: LeicaRequest.pluginPageTypes[plugin],
+        };
+        data[plugin] = {
+            format: 'json',
+            controller: controller,
+            action: action
+        };
+        for (var key in localData) {
+            data[plugin][key] = localData[key];
+        }
+        jQuery.ajax({
+            url: url,
+            async: sync ? false : true,
+            data: data,
+            success: function(data) {
+                if (callback) {
+                    callback(data);
+                }
+            },
+            error: function() {
+                if (errorCallback) {
+                    errorCallback();
+                }
+            }
+        })
+    },
+
+    checkProductPurchasability: function(productIds, callback, errorCallback) {
+        return LeicaRequest.requestJson('tx_leicashoputil_product', 'Product', 'checkProductPurchasability', { productIds: productIds }, callback, errorCallback);
+    },
+
+    whitepaperDownload: function(name, callback, errorCallback) {
+      return LeicaRequest.requestJson('tx_leicamtooltracking_mtool', 'Mtool', 'whitepaperDownload', { 'name': name }, callback, errorCallback, true);
+    }
+};
+
+$(document).ready(function() {
+  function registerWhitepaperDownload($a) {
+    var file = $a[0].pathname.split('/').pop();
+    if (/\.pdf$/.test(file)) {
+      $a.click(function() {
+        LeicaRequest.whitepaperDownload(file);
+      });
+    }
+  }
+  $('.sl-fce-container-downloads a').each(function() {
+    registerWhitepaperDownload($(this));
+  });
+});
+
+
+

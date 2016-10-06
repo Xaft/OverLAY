@@ -1,0 +1,26 @@
+function piResponse() {
+piSetCookie('visitor_id149501', '6262280', 3650);
+
+if (document.location.protocol != "https:") {
+var analytics_link = "http://" + "www2.leica-microsystems.com/analytics?";
+pi.tracker.visitor_id='6262280';
+
+pi.tracker.visitor_id_sign='d16f36a67ca62a64a8905974d2eff2bcd93436cfcb17d2ba55ff6812167a7b7999ebec672fea356640b48578c1996eab83d0e6ff';
+
+var variables = 'conly=true';
+for (property in pi.tracker) {
+	variables += "&"+property+"="+pi.tracker[property];
+}
+var headID = document.getElementsByTagName("head")[0];
+piScriptObj[piScriptNum] = document.createElement('script');
+piScriptObj[piScriptNum].type = 'text/javascript';
+piScriptObj[piScriptNum].src = analytics_link + variables;
+headID.appendChild(piScriptObj[piScriptNum]);
+piScriptObj[piScriptNum].onload = function() { return; }
+}
+}
+piResponse();
+
+
+
+

@@ -1,0 +1,62 @@
+var mediatisGTM = (function () {
+	var self = {};
+
+	cookieName = "GTMoptout";
+	cookieExpire  = new Date(new Date().getTime() +1000*60*60*24*365);
+
+	function getCookie( cookieName ) {
+		var cookies = document.cookie.split(";");
+		var cookie;
+		for( var i=0; i < cookies.length; i++ ) {
+			cookie = cookies[i].split("=");
+			try {
+				if( cookie[0].trim() == cookieName ) return cookie[1].trim();
+			} catch ( e ) { }
+		}
+	}
+	
+	function setCookie( options ) {
+		if( !options.name && !options.value ) return false;
+	
+		var cookieString = options.name + "=" + options.value;
+		if( options.expires ) {
+			cookieString += ";expires=" + options.expires.toGMTString();
+		}
+		cookieString += ";path=/";
+	
+		document.cookie = cookieString;
+		return true;
+	}
+
+	self.activate = function() {
+		setCookie({name: cookieName, value: "trackme:1", expires: cookieExpire});
+	};
+
+	self.deactivate = function() {
+		setCookie({name: cookieName, value: "trackme:0", expires: cookieExpire});
+	};
+	
+	self.trackingStatus = function() {
+		cookieValue = getCookie(cookieName);
+		if ( cookieValue === undefined || cookieValue == 'trackme:1' ) {
+			return true;
+		} else {
+			return false;
+		}
+	};
+
+	self.setCheckbox = function(checkbox) {
+		checkbox.checked = self.trackingStatus();
+	};
+
+	return self;
+}());
+
+/**
+* InternetExplorer String.trim() fix
+*/
+if(typeof String.prototype.trim !== 'function') {
+	String.prototype.trim = function() {
+		return this.replace(/^\s+|\s+$/g, '');
+	};
+}
