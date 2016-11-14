@@ -70,6 +70,7 @@
 		<script type="text/javascript">alert("Your browser does not support the canvas tag.");</script>
 	<![endif]-->
 	<script src="processing_en.js" type="text/javascript"></script>
+	<script type="text/javascript" src="envideo_handler.js" ></script>
 	<script type="text/javascript" src="jszip.js" ></script>
 	<script type="text/javascript" src="jszip-utils.js" ></script>
 	<script type="text/javascript">
@@ -108,53 +109,17 @@
 		<td id="container">
 		<div>
 			<table id="head" align="center"><tr><td align="left"><a href="index.html">Main page</a></td><td align="center">OverLAY</td><td align="right"><a href="examples.html">Examples</a></td></table>
-			<div id="content">
+			<div id="OverLAYvideo">
 				We are preparing your video, just a few seconds, please!
 				<script type="text/javascript">
 					var get_value=$_GET("drectory");
 					var zipMode=0;
 					var xmlDoc;
-					var overlayXML="a";
+					var overlayXML="";
 					var heightCorrection=0;
 					//var dx=0,dy=0;
 					if (get_value==undefined) zipMode=1;
 					else get_value.search(".zip")>-1?zipMode=1:'';
-					function createCanvas(){
-						
-						//zipMode=0;
-						  //document.write(typeof(overlayXML));
-						heightCorrection=parseInt(document.getElementById("head").offsetHeight)+60;
-						
-						wdth=parseInt(xmlDoc.getElementsByTagName("dimensions")[0].getAttribute("width"));
-						ch=xmlDoc.getElementsByTagName("dimensions")[0].getAttribute("channels");
-						if (ch>1) wdth+=22;
-						
-						
-						if (wdth<300) wdth=300;
-						
-						
-						heght=parseInt(xmlDoc.getElementsByTagName("dimensions")[0].getAttribute("height"))+22;
-						scle=1;
-						
-						if (wdth>window.innerWidth) {
-							scle=(window.innerWidth-25)/wdth;
-							wdth=window.innerWidth-25;
-							heght=heght*scle;
-						}
-						if (heght>window.innerHeight-heightCorrection) {
-							scle=(window.innerHeight-heightCorrection)/heght;
-							heght=window.innerHeight-heightCorrection;
-							wdth*=scle;
-						}
-						
-						document.getElementById('content').style.width=(wdth)+'px';
-						document.getElementById('head').style.width=(wdth)+'px';
-						document.getElementById("content").innerHTML="<canvas id=\"envideo\" data-processing-sources=\"en_video.pde\" width=\""+wdth+"\" height=\""+(heght)+"\"><p>Your browser does not support the canvas tag.</p></canvas>";
-						var procCanvas=document.getElementById("envideo");
-						procCanvas.width=wdth;
-						procCanvas.height=heght;
-						Processing.loadSketchFromSources("envideo",["en_video.pde"]);
-					}
 					if (zipMode) {
 						var zip=new JSZip();
 						if (get_value!=undefined){
@@ -174,7 +139,7 @@
 								  .then(function success(text) {
 									xmlDoc=(new DOMParser).parseFromString(text,"application/xml"); 
 									overlayXML=text;
-									createCanvas();
+									createCanvas("OverLAYvideo",zipMode,1.0,overlayXML,xmlDoc,zip,0,1);
 									
 								  }, function error(e) {
 									document.getElementById("content").innerHTML="Oops. It seems that we ran into some trouble.<br>Please, make sure that you select a valid OverLAY .zip file!";
@@ -182,7 +147,7 @@
 							
 							});
 						}
-						else document.getElementById("content").innerHTML="<input type=\"file\" id=\"zipfile\" onchange=\"zipFile_Changed()\" />";
+						else document.getElementById("OverLAYvideo").innerHTML="<input type=\"file\" id=\"zipfile\" onchange=\"zipFile_Changed()\" />";
 						function zipFile_Changed(){
 							var zipurl=document.getElementById("zipfile").files[0];
 							zip.loadAsync(zipurl)
@@ -194,7 +159,7 @@
 							  .then(function success(text) {
 								xmlDoc=(new DOMParser).parseFromString(text,"application/xml"); 
 								overlayXML=text;
-								createCanvas();
+								createCanvas("OverLAYvideo",zipMode,1.0,overlayXML,xmlDoc,zip,0,1);
 								
 							  }, function error(e) {
 								document.write("error");
@@ -214,7 +179,7 @@
 						xmlhttp.open("GET",dirToLU+"overlay.xml",false);
 						xmlhttp.send();
 						xmlDoc=xmlhttp.responseXML;
-						createCanvas();
+						createCanvas("OverLAYvideo",zipMode,1.0,overlayXML,xmlDoc,null,0,1);
 					}
 
 

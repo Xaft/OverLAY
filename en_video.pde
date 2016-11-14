@@ -16,8 +16,18 @@
 	
 /* @pjs globalKeyEvents="true"; */
 
+/** to be set by parent script **/
+int wdth, heght;
+double scle, maxScle;
+String dirToLU;
+boolean zipMode;
+boolean previewMode=false;
+boolean zoomable=true;
+var zip;
+
 /** global variables **/
-int fontsize = 24;
+int fontsize=24;
+int minWdth=300;
 int W;
 int H;
 int D; 
@@ -37,22 +47,25 @@ int[] scrbPos=new int[4];
 int done_strt=0;
 int done_stp=0;
 double zoom=1.0;
-int mx,my,top,left,dx,dy;
+int mx,my;
 int chbtOff=8;
+double initScle;
 //int mouseScroll=0;
 boolean isExplorer=(navigator.appName == "Microsoft Internet Explorer");
 //String[] imn=loadStrings("img.txt");
-PImage[][] img=new PImage[channels+1][D];
-boolean[][] calculated=new boolean[channels+1][D];
-boolean[] requested=new boolean[D];
-boolean channeltoggler=new boolean[channels+1];
+PImage[][] img;
+boolean[][] calculated;
+boolean[] requested;
+boolean[] channeltoggler;
 //int tbd=channels*D;
 int reqCnt=0;
 int maxReqItems;
 int lastReqItem=0;
 butoons[] btns=new butoons[chbtOff];
 scroolBar scrb;
+fillBar FPSBar;
 boolean mgnify;
+
 boolean stp;
 boolean inv;
 boolean ovrly;
@@ -66,7 +79,7 @@ XMLElement xml;
 //int maxPathLength=5;
 String aW;
 String ext=".jpg";
-String helpString="SPACE - toggle play\nmouse scroll, LEFT/RIGHT arrow - step one frame\nUP/DOWN arrow - adjust the playback speed\n1-0 - toggle channels\nm - toggle magnifier\no - toggle overlay\nh - toggle help";
+String helpString="SPACE - toggle play\nmouse scroll, LEFT/RIGHT arrow - step one frame\nUP/DOWN arrow - adjust the playback speed\n'-' - '+' - zoom out/in\n1-0 - toggle channels\nm - toggle magnifier\no - toggle overlay\nh - toggle help";
 overlys[] ols;
 /** global colors**/
 color sC=color(#000022);
@@ -77,63 +90,77 @@ color button_bgColor=color(#333333);
 /**
 * setup the script, the interface (setupButoons()) and load the overlay from 'overlay.xml' (loadXML())
 **/
-void setup() {
-	
-  size(wdth,heght);
-
-  var canvasBounds=document.getElementById("envideo").getBoundingClientRect();
-  top=canvasBounds.top;
-  left=canvasBounds.left;
-  dx=0;
-  dy=0;
-  stp=false;
-  inv=false;
-  ovrly=true;
-  textFont(createFont("Arial",fontsize));
-  PFont fontA = loadFont("Arial");
-  textFont(fontA, 12);
-  mgnify=true;
-  if (zipMode) xml=new XMLElement(overlayXML);
-  else xml=new XMLElement(this,dirToLU+"overlay.xml");
-  W=int(xml.getChild(0).getInt("width"));
-  H=int(xml.getChild(0).getInt("height"));
-  D=int(xml.getChild(0).getInt("depth"));
-  channels=int(xml.getChild(0).getInt("channels"));
-  effectiveW=channels>1?wdth-22:wdth;
-  effectiveH=heght-22;
-  //channels=2;
-  if (channels>1) chTS=channels;
-  ext=xml.getChild(0).getStringAttribute("ext");
-  if (ext==null) ext=".jpg";
-  if (match(ext,".")==null) ext="."+ext;
-  maxReqItems=int(20/channels);
-  img=new PImage[channels+2][D];
-  calculated=new boolean[channels+2][D];
-  channeltoggler=new boolean[channels];
-  for (int k=0;k<channels;k++) channeltoggler[k]=true;
-  tbd=channels*D;
-  noL=str(D).length<3?3:str(D).length;
-  if (xml.getChild(1).getName()=="controls"){
-	f_Rate=int(xml.getChild(1).getInt("FPS"));
-	if (f_Rate<5||f_Rate>60) f_Rate=25;
-    playable=(xml.getChild(1).getInt("isPlayable")==1)?true:false;
-	resizeable=(xml.getChild(1).getInt("isResizeable")==1)?true:false;
-    stp=(xml.getChild(1).getInt("isPlaying")==1)?false:true;
-    ovrly=(xml.getChild(1).getInt("overlaid")==1)?true:false;
-    mgnify=(xml.getChild(1).getInt("magnifyable")==1)?true:false;
-    mag_size=xml.getChild(1).getInt("mag_size");
+void setup(int _w, int _h, double _s, double _ms, boolean _zm, String _xml, var _zip, boolean _pm, boolean _zm) {
+  if (_w!=null){
+	  wdth=_w;
+	  heght=_h;
+	  scle=_s;
+	  maxScle=_ms;
+	  initScle=_s;
+	  zipMode=_zm;
+	  previewMode=_pm;
+	  zoomable=_zm;
+	  size(wdth,heght);
+	  stp=false;
+	  inv=false;
+	  ovrly=true;
+	  textFont(createFont("Arial",fontsize));
+	  PFont fontA = loadFont("Arial");
+	  textFont(fontA, 12);
+	  mgnify=true;
+	  if (zipMode) {
+		  xml=new XMLElement(_xml);
+		  zip=_zip;
+	  }
+	  else {
+		  dirToLU=_xml;
+		  xml=new XMLElement(this,_xml+"overlay.xml");
+	  }
+	  W=int(xml.getChild(0).getInt("width"));
+	  H=int(xml.getChild(0).getInt("height"));
+	  D=int(xml.getChild(0).getInt("depth"));
+	  channels=int(xml.getChild(0).getInt("channels"));
+	  effectiveW=channels>1?wdth-22:wdth;
+	  effectiveH=heght-22;
+	  //channels=2;
+	  if (channels>1) chTS=channels;
+	  ext=xml.getChild(0).getStringAttribute("ext");
+	  if (ext==null) ext=".jpg";
+	  if (match(ext,".")==null) ext="."+ext;
+	  maxReqItems=int(20/channels);
+	  channeltoggler=new boolean[channels];
+	  for (int k=0;k<channels;k++) channeltoggler[k]=true;
+	  tbd=channels*D;
+	  noL=str(D).length<3?3:str(D).length;
+	  if (xml.getChild(1).getName()=="controls"){
+		f_Rate=int(xml.getChild(1).getInt("FPS"));
+		if (f_Rate<5||f_Rate>60) f_Rate=25;
+		playable=(xml.getChild(1).getInt("isPlayable")==1)?true:false;
+		resizeable=(xml.getChild(1).getInt("isResizeable")==1)?true:false;
+		stp=(xml.getChild(1).getInt("isPlaying")==1)?false:true;
+		ovrly=(xml.getChild(1).getInt("overlaid")==1)?true:false;
+		mgnify=(xml.getChild(1).getInt("magnifyable")==1)?true:false;
+		//zoomable=(xml.getChild(1).getInt("zoomable")==1)?true:false;
+		mag_size=xml.getChild(1).getInt("mag_size");
+	  }
+	  int _D=(previewMode)?D+1:D;
+	  img=new PImage[channels+2][_D];
+	  calculated=new boolean[channels+2][_D];
+	  requested=new boolean[_D];
+	  f=(previewMode)?D:0;
+	  self=Processing.getInstanceById("envideo_0");
+	  noStroke();
+	  background(0);
+	  fill(0);
+	  smooth();
+	  frameRate(60);
+	  mouseScroll=0;
+	  setupButoons();
+	  loadXML();
+	  if (zipMode) getImgsfromZip();
+		else getImgs();
   }
-  
-  self=Processing.getInstanceById("envideo");
-  noStroke();
-  background(0);
-  fill(0);
-  smooth();
-  frameRate(60);
-  mouseScroll=0;
-  setupButoons();
-  loadXML();
-  
+  //else size(300,300);
 }
 void setupButoons(){
 	//play
@@ -151,11 +178,11 @@ void setupButoons(){
  btns[2]=new simpleButoon(22,offH,20,20,TRIANGLES,vx,vy); 
  btns[3]=new textButoon(wdth-108,offH,47,20,"MGNFY","magnify area under mouse"); 
  btns[4]=new textButoon(wdth-60,offH,47,20,"OVRLY", "toggle graphical overlay");
- btns[5]=new textButoon(wdth-162,offH,20,20,"1x", "restore original scale"); 
- btns[6]=new textButoon(wdth-140,offH,30,20,"MAX", "scale to available space"); 
+ btns[5]=new textButoon(wdth-162,offH,20,20," -", "zoom out"); 
+ btns[6]=new textButoon(wdth-140,offH,20,20," +", "zoom in"); 
  btns[7]=new textButoon(wdth-12,offH,12,20,"?", "show help");
  btns[7].setColor=butoons.offColor; 
- if (isExplorer) {
+ if (isExplorer||scle<1) {
     btns[5].setColor=butoons.offColor;
     btns[6].setColor=butoons.offColor;
  }
@@ -166,6 +193,7 @@ void setupButoons(){
  }
  //println(f_Rate);
  FPSBar=new fillBar(22,offH,55,20,f_Rate,5,60);
+ 
  int strtPos=0;
  if (!playable) {
      btns[0].operational=false;
@@ -177,10 +205,10 @@ void setupButoons(){
      btns[2].operational=false;
      scrbPos[0]=79;scrbPos[1]=offH;scrbPos[2]=wdth-246;scrbPos[03]=20;     
  }
- if (resizeable) {
+ if (resizeable||!zoomable) {
 	 btns[5].operational=false;
      btns[6].operational=false;
-	 scrbPos[0]=44;scrbPos[1]=offH;scrbPos[2]=wdth-160;scrbPos[03]=20;
+	 scrbPos[0]=80;scrbPos[1]=offH;scrbPos[2]=wdth-190;scrbPos[03]=20;
  }
  scrb=new scroolBar(scrbPos[0],scrbPos[1],scrbPos[2],scrbPos[3],0,D,strtPos,true,true); 
  if (stp) scrb.lop=!stp;
@@ -307,79 +335,97 @@ void loadXML(){
 **/ 
 void draw() { 
      //println("f:"+f);
-    mx=int((mouseX+dx)/zoom);
-    my=int((mouseY+dy)/zoom);
+    mx=int(mouseX);//int((mouseX+dx)/zoom);
+    my=int(mouseY);//(mouseY+dy)/zoom);
 	
     scale(scle);
 	fill(0);
 	rect(0,0,wdth,heght);
-    if (calculated[chTS][f]){
-		if (resizeable) {
-			
-			wdth=scle*img[chTS][f].width+20;
-			heght=scle*img[chTS][f].height+20;
-			document.getElementById('content').style.width=(wdth)+'px';
-			setupButoons();
-			self.size(wdth, heght);
-			scale(scle);
+	if (previewMode){
+		//println(f);
+		if (calculated[chTS][f]){
+			image(img[chTS][f], 0, 0);
+			noLoop();
 		}
-		image(img[chTS][f], 0, 0); 
-		if (!imagesReady) {
-			text("loading ",effectiveW/2-40,effectiveH/2);
-			int k=0;
-			while (calculated[chTS][k]) k++;
-			done_stp=k-1;
-			if (k>=D) {
-				imagesReady=true;
-				done_stp=k;
-			}
-			else{
-				if (!calculated[channels-1][k]) preloadImages(k);
-				if (channels>1&&calculated[channels-1][k]&&!calculated[chTS][k]) calculateImages(k);
-			}
-		}
-		if (keyPressed){
-			//println("'"+key+"' "+keyCode);
-			if (key=='i')inv=!inv;
-			if (keyCode==UP) {FPSBar.adjustValue(1);setFRate(++f_Rate);}
-			if (keyCode==DOWN) {FPSBar.adjustValue(-1);setFRate(--f_Rate);}
-			if (stp&&keyCode==LEFT) mouseScroll=-1;
-			if (stp&&keyCode==RIGHT) mouseScroll=1;
-			if (key==32) stp=!stp;
-			int kk=key-49;
-			if (kk>=0&&kk<channels) toggleChannel(kk+chbtOff);
-			/*if (channels>1&&key=='1') toggleChannel(0+chbtOff);
-			if (channels>1&&key=='2') toggleChannel(1+chbtOff);
-			if (channels>2&&key=='3') toggleChannel(2+chbtOff);
-			if (channels>3&&key=='4') toggleChannel(3+chbtOff);*/
-			if (key=='o'||key=='O') buttonClicked(4);
-			if (key=='m'||key=='M') buttonClicked(3);
-			if (key=='h'||key=='H') buttonClicked(7);
-			keyPressed=false;
-		}
-		pushStyle();
-		if (ovrly&&!show_help) overly();
-		popStyle();
-		if (imagesReady&&mgnify&&!show_help) Magnify();
-		if (imagesReady&&!stp) ply();
 		else {
-			if (mouseScroll%1!=0) mouseScroll=0;
-			f+=mouseScroll;
-			scrb.setPos(mouseScroll);
-			if (f<0) f=0;
-			else if (f>=D) f=D-1;
-			mouseScroll=0;
-		}
-    }
-    else {
-		if (!calculated[channels-1][f]) {
+			lastReqItem=f;
 			preloadImages(f);
+			if (channels>1&&calculated[channels-1][f]&&!calculated[chTS][f]) calculateImages(f);
 		}
-		if (channels>1&&calculated[channels-1][f]&&!calculated[chTS][f]) calculateImages(f);
-    }
-	if (show_help) showHelp();
-	scale(1.0/scle);
-    drawButoonBar(); 
+	}
+	else{
+		if (calculated[chTS][f]){
+			if (resizeable) {			
+				wdth=scle*img[chTS][f].width+20;
+				heght=scle*img[chTS][f].height+20;
+				document.getElementById('content').style.width=(wdth)+'px';
+				setupButoons();
+				self.size(wdth, heght);
+				scale(scle);
+			}
+			image(img[chTS][f], 0, 0); 
+			if (!imagesReady) {
+				text("loading ",effectiveW/2-40,effectiveH/2);
+				checkImages();
+				/*int k=0;
+				while (k<D&&calculated[chTS][k]) k++;
+				done_stp=k-1;
+				if (k>=D) {
+				  imagesReady=true;
+				  done_stp=k;
+				}
+				else{
+				  if (!calculated[channels-1][k]) preloadImages(k);
+				  if (channels>1&&calculated[channels-1][k]&&!calculated[chTS][k]) calculateImages(k);
+				}*/
+			  }
+			if (keyPressed&&mI){
+				//println("'"+key+"' "+keyCode);
+				if (key=='i')inv=!inv;
+				if (keyCode==UP) {FPSBar.adjustValue(1);setFRate(++f_Rate);}
+				if (keyCode==DOWN) {FPSBar.adjustValue(-1);setFRate(--f_Rate);}
+				if (stp&&keyCode==LEFT) mouseScroll=-1;
+				if (stp&&keyCode==RIGHT) mouseScroll=1;
+				if (key==32) {  scrb.lop=!scrb.lop; 
+							stp=!stp;
+							f=scrb.pos;}
+				int kk=key-49;
+				if (kk>=0&&kk<channels) toggleChannel(kk+chbtOff);
+				/*if (channels>1&&key=='1') toggleChannel(0+chbtOff);
+				if (channels>1&&key=='2') toggleChannel(1+chbtOff);
+				if (channels>2&&key=='3') toggleChannel(2+chbtOff);
+				if (channels>3&&key=='4') toggleChannel(3+chbtOff);*/
+				if (key=='o'||key=='O') buttonClicked(4);
+				if (key=='m'||key=='M') buttonClicked(3);
+				if (key=='h'||key=='H') buttonClicked(7);
+				if (key=='-') buttonClicked(5);
+				if (key=='+') buttonClicked(6);
+				keyPressed=false;
+			}
+			
+			pushStyle();
+			if (ovrly&&!show_help) overly();
+			popStyle();
+			if (mgnify&&!show_help) Magnify();
+			if (imagesReady&&!stp) ply();
+			else if (mI) {    
+				if (mouseScroll%1!=0) mouseScroll=0;
+				f+=mouseScroll;
+				
+				if (f<0) f=0;
+				else if (f>=D) f=D-1;
+				scrb.setPos(mouseScroll);
+				mouseScroll=0;
+			}
+		}
+		else {
+			checkImages();
+		}
+		if (show_help) showHelp();
+		
+	}
+	scale(1.0/scle);   
+	if(!previewMode) drawButoonBar(); 
 } 
 void drawButoonBar(){
     pushStyle();
@@ -428,14 +474,62 @@ void showHelp(){
 	text (helpString,4,6,292,103);
 	popStyle();
 }
+void mousePressed() {
+  if (previewMode){
+	previewMode=false;	
+	f=0;
+	lastReqItem=f;
+	loop();
+  }
+}
 /** end main **/
 
 /**
 * preload and (re)calulate the images from a directory or from a zip file
 **/
+void checkImages(){
+	done_stp=0;
+	int i=0,j=0;
+	for (i=0;i<D;i++){
+		boolean allChannels=true;
+		for (j=0;j<channels;j++){
+			if (img[j][i]!=undefined&&img[j][i].width!=undefined&&img[j][i].width!=0) calculated[j][i]=true;
+			allChannels&=calculated[j][i];	
+		}
+		if (allChannels) {
+			if (! calculated[chTS][i]&&channels>1) calculateImages(i);
+			done_stp++;
+		}
+	}
+	if (done_stp>=D) imagesReady=true;
+}
+void getImgs(){
+	for (int i=0;i<D;i++){
+		for (int j=0;j<channels;j++){
+			img[j][i]=requestImage(getName(j,i));
+		}
+	}
+}
+void getImgsfromZip(){
+	for (int i=0;i<D;i++){
+		for (int j=0;j<channels;j++){
+			//println(i+","+j+":"+getName(j,i));
+			getImgfromZip(j,i);
+			/*zip.file(getName(j,i)).async("binarystring")
+				.then(function success(dta){
+					//document.write(btoa(dta));
+					img[j][i]=requestImage("data:image/jpeg;base64,"+btoa(dta));
+					//alert(img[ch][q].width);
+					//calculated[ch][q]=true;
+				}, function error(e){
+					println(i+","+j);
+				});*/
+		}
+	}	
+}
 void preloadImages(int frme){
    
-    if (!requested[frme]&lastReqItem<D&&reqCnt<maxReqItems) request();
+    if (!requested[frme]&lastReqItem<=D&&reqCnt<maxReqItems) request();
 		for (int j=0;j<channels;j++){
 		   if ((img[j][frme].width!=undefined&&img[j][frme].width!=0)&&!calculated[j][frme]) { 
 			 calculated[j][frme]=true;
@@ -473,24 +567,7 @@ void calculateImages( int frme){
    //frameRate(60); 
    //loop();
 }
-void reCalculate(){
-     //
-      text("computing ",effectiveW/2-40,effectiveH/2+20);
-     noLoop();
-      for (i=0;i<D;i++){
-        img[channels+1][i]=createImage(img[0][i].width,img[0][i].height,RGB);  
-        for (int j=0;j<channels;j++){
-            if (channeltoggler[j]) {
-              //println(j);
-              img[channels+1][i].addChannel(img[j][i],img[channels+1][i]);
-            }
-           //img[channels][f].blend(img[j][f],0,0,W,H,0,0,W,H,ADD);
-        }
-      //PrgBar.setValue(i/D);
-     // PrgBar.draw();
-      }
-  loop();
-}
+
 void getImgfromZip(int ch, int q){
 	zip.file(getName(ch,q)).async("binarystring")
 		.then(function success(dta){
@@ -570,20 +647,25 @@ void buttonClicked(int i){
     btns[i].setColor=ovrly?fC:ofC;
     break;
   case 5:
-    if (!isExplorer){
+	scle=(scle*0.75<initScle)?initScle:round(scle*7.5)/10;
+	doZoom();
+    /*if (!isExplorer){
       zoom=1;
       doZoom();
-    }
+    }*/
     break;
   case 6:
-    if (!isExplorer){
+	scle=(scle*1.25>maxScle)?maxScle:round(scle*12.5)/10;
+	doZoom();
+    /*if (!isExplorer){
       zoom=(window.innerWidth/(wdth+12)<window.innerHeight/(heght+heightCorrection))?window.innerWidth/(wdth+12):window.innerHeight/(heght+heightCorrection);
       //zoom=(wdth*zoom)/wdth;
       doZoom();
-    }
+    }*/
     break;
   case 7:
 	show_help=!show_help;
+	break;
   case 8:
   case 9:
   case 10:
@@ -603,11 +685,23 @@ void buttonClicked(int i){
   mousePressed=false;
 }
 void doZoom(){
- if (document.body.style.WebkitTransform!=null) document.body.style.WebkitTransform="scale("+zoom+")"; 
+ /*if (document.body.style.WebkitTransform!=null) document.body.style.WebkitTransform="scale("+zoom+")"; 
  else if (document.body.style.MozTransform!=null) document.body.style.MozTransform="scale("+zoom+")"; 
  var canvasBounds=document.getElementById("envideo").getBoundingClientRect(); 
  dx=left-canvasBounds.left;
- dy=top-canvasBounds.top;
+ dy=top-canvasBounds.top;*/
+		
+		wdth=round(scle*img[chTS][f].width)+20;
+		heght=round(scle*img[chTS][f].height)+20;
+		if (wdth<minWdth) wdth=minWdth;
+		document.getElementById('OverLAYvideo').style.width=(wdth)+'px';
+		effectiveW=channels>1?wdth-22:wdth;
+		effectiveH=heght-22;
+		setupButoons();
+		self.size(wdth, heght);
+	
+	
+	
 }
 void toggleChannel(int i){
    // println(i);
@@ -687,10 +781,10 @@ void Magnify() {
     int x=mx;
     int y=my;
 	if (x>0&&x<effectiveW && y>0&&y<effectiveH && mI) {
-		img[chTS][f].magnify(x,y,mag_size,magn);
+		//img[chTS][f].magnify(x,y,mag_size,magn);
 		//magnifiedFrame=f;
-	}
-    /*loadPixels();
+	
+    loadPixels();
     int d=2*mag_size+1;
     color[] tc=new color[d*d];
     if (x>0&&x<effectiveW && y>0&&y<effectiveH && mI){
@@ -718,7 +812,8 @@ void Magnify() {
         }
       }
     }
-    updatePixels();*/
+    updatePixels();
+	}
 }
 color invrt(color c){
    int a=0xff;
@@ -962,7 +1057,8 @@ class fillBar extends butoons{
          setColor=fillColor;
          operational=true;
        } 
-       else{ operational=false;}
+       else{ operational=false;
+	   }
    }
    void toolTip(){
       if (vertical) {
@@ -983,7 +1079,7 @@ class fillBar extends butoons{
       if (vertical) rect(x,y+h-bw,w,bw);
       else rect(x,y,bw,h);
       if (museOver()) toolTip();
-      popStyle;     
+      popStyle();     
    }
    void adjustValue(int increment){
      if (increment%1!=0) increment=0;
