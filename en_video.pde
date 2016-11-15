@@ -79,7 +79,8 @@ XMLElement xml;
 //int maxPathLength=5;
 String aW;
 String ext=".jpg";
-String helpString="SPACE - toggle play\nmouse scroll, LEFT/RIGHT arrow - step one frame\nUP/DOWN arrow - adjust the playback speed\n'-' - '+' - zoom out/in\n1-0 - toggle channels\nm - toggle magnifier\no - toggle overlay\nh - toggle help";
+String helpString="SPACE - toggle play\nmouse scroll, LEFT/RIGHT arrow - step one frame\nUP/DOWN arrow - adjust the playback speed\n'-' - '+' - zoom out/in\n1-0 - toggle channels\nm - toggle magnifier, i - invert colors\no - toggle overlay\nh - toggle help";
+int helpHeight=125;
 overlys[] ols;
 /** global colors**/
 color sC=color(#000022);
@@ -90,7 +91,7 @@ color button_bgColor=color(#333333);
 /**
 * setup the script, the interface (setupButoons()) and load the overlay from 'overlay.xml' (loadXML())
 **/
-void setup(int _w, int _h, double _s, double _ms, boolean _zm, String _xml, var _zip, boolean _pm, boolean _zm) {
+void setup(int _w, int _h, double _s, double _ms, boolean _zm, String _xml, var _zip, boolean _pm, boolean _zoom) {
   if (_w!=null){
 	  wdth=_w;
 	  heght=_h;
@@ -99,7 +100,7 @@ void setup(int _w, int _h, double _s, double _ms, boolean _zm, String _xml, var 
 	  initScle=_s;
 	  zipMode=_zm;
 	  previewMode=_pm;
-	  zoomable=_zm;
+	  zoomable=_zoom;
 	  size(wdth,heght);
 	  stp=false;
 	  inv=false;
@@ -109,7 +110,9 @@ void setup(int _w, int _h, double _s, double _ms, boolean _zm, String _xml, var 
 	  textFont(fontA, 12);
 	  mgnify=true;
 	  if (zipMode) {
+		 
 		  xml=new XMLElement(_xml);
+		  
 		  zip=_zip;
 	  }
 	  else {
@@ -469,9 +472,9 @@ void drawButoonBar(){
 void showHelp(){
 	pushStyle();
 	fill(afC,180);
-	rect (2,2,296,106);
+	rect (2,2,296,helpHeight+3);
 	fill (0xffffff,255);
-	text (helpString,4,6,292,103);
+	text (helpString,4,6,292,helpHeight);
 	popStyle();
 }
 void mousePressed() {
@@ -816,10 +819,10 @@ void Magnify() {
 	}
 }
 color invrt(color c){
-   int a=0xff;
-   int r=0xff-c>>16&0xff; 
-   int g=0xff-c>>8&0xff; 
-   int b=0xff-c&0xff; 
+   
+   int r=0xff-(c>>16&0xff); 
+   int g=0xff-(c>>8&0xff); 
+   int b=0xff-(c&0xff); 
    return color(r,g,b);
 }
 void mouseOver(){

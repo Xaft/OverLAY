@@ -3,15 +3,13 @@
   <head>
     <meta charset="UTF-8">
     <title>Overlay by Xaft</title>
+	<link rel="icon"  type="image/x-icon" href="ico.ico" >
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
     <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
-	<script src="processing_en.js" type="text/javascript"></script>
-	<script type="text/javascript" src="envideo_handler.js" ></script>
-	<script type="text/javascript" src="jszip.js" ></script>
-	<script type="text/javascript" src="jszip-utils.js" ></script>
+	
   </head>
   <body>
     <section class="page-header">
@@ -29,10 +27,14 @@
 
     <section class="main-content">
     <h3>
-	<div id="OverLAYcontainer" align="center">
-				We are preparing your video, just a few seconds, please!
+	<script src="processing_en.js" type="text/javascript"></script>
+	<script type="text/javascript" src="envideo_handler.js" ></script>
+	<script type="text/javascript" src="jszip.js" ></script>
+	<script type="text/javascript" src="jszip-utils.js" ></script>
+	<div id="OverLAYcontainer" style="margin-right: auto; margin-left: auto; ">
+				<img src="ico.png" style="display:block;margin: 0 auto;">We are preparing your video, just a few seconds, please!
 				<script script type="text/javascript">
-					addOverLAYVideo("w1118,fit.zip","OverLAYcontainer",1,2.0, false, false)
+					addOverLAYVideo("w1118,fit.zip","OverLAYcontainer",1,2.0, 0, 0)
 				</script>
 				
 				
@@ -52,7 +54,7 @@
     <br />
     To overcome these limitations, I started coding an image viewer/video player that facilitates better appeciation of image data with ease of use and contributes to data accessibility, exchange and thus scientific  discussion.<br /><br />
     <b>What is OverLAY</b><br /><br />
-    OverLAY is a script that runs in a web-browser and it can parse an appropriately prepared folder or a .zip file to load multi-channel image sequences with a non-destructive graphical overlay. It allows play-back of these sequences with user-defined speed and also enables stepping through the sequnce frame-by-frame. Users can <br />
+    OverLAY has initially been a script that runs in a web-browser and it can parse an appropriately prepared folder or a .ovl (pratically a .zip) file to load multi-channel image sequences with a non-destructive graphical overlay. It allows play-back of these sequences with user-defined speed and also enables stepping through the sequnce frame-by-frame. Users can <br />
     <ul>
     	<li>zoom globally and magnify locally</li>
         <li>toggle channels</li>
@@ -60,8 +62,9 @@
         <li>adjust the speed of playback</li>
         <li>step through the sequence using the progress bar, the keyboard arrows of even the mouse scroll</li>
     </ul><br />  
+	Now, all these functionalities are available offline, using the <a href=downloads.html">OverLAY</a> player, which is a <a href="https://processing.org">Processing</a>/JAVA port of the original script.<br><br> 
 	<div align="center">
-    Best way to learn about OverLAY is to try it, see some <a href="examples.html">Examples</a>!<br /><br />
+    Best way to learn about <a href=downloads.html">OverLAY</a> is to try it, see some <a href="examples.html">Examples</a>!<br /><br />
     If you want to know more about how it works, <a href="howitworks.html">this way</a> please!</div>
     <a name="legal"></a><b>Legal disclaimer</b><br /><br />
      OverLAY is a script written in <a href="https://processingjs.org">Processing.js</a> and  <a href="https://www.javascript.com">JavaScript</a>. It uses the <a href="https://stuk.github.io/jszip/">JSZip.js</a> library to read contents of zip files.<br />
